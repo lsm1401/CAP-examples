@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smucpapp-tutorial
+  namespace: sap-trainer02
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smucpapp-tutorial
+  template:
+    metadata:
+      labels:
+        app: smucpapp-tutorial
+        version: v1
+    spec:
+      containers:
+      - name: smucpapp-tutorial
+        image: lsm1401/smucpapp-tutorial:latest
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+          requests:
+            memory: 32Mi
+        ports:
+        - containerPort: 4004
+          name: http
+        envFrom:
+        - secretRef:
+            name: cpapp-kyma-db-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smucpapp-tutorial
+  labels:
+    app: smucpapp-tutorial
+spec:
+  ports:
+  - port: 4004
+    name: http
+    targetPort: 4004
+  selector:
+    app: smucpapp-tutorial
+
+---
+apiVersion: gateway.kyma-project.io/v1alpha1
+kind: APIRule
+metadata:
+  name: smucpapp-tutorial-rule
+  namespace: sap-trainer02
+spec:
+  gateway: kyma-gateway.kyma-system.svc.cluster.local
+  service:
+    name: smucpapp-tutorial
+    port: 4004
+    host: sap-trainer02-sumin
+  rules:
+    - path: /.*
+      methods: ["GET","POST"]
+      mutators: []
+      accessStrategies:
+      - handler: noop
+
