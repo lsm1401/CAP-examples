@@ -60,8 +60,10 @@ spec:
     host: sap-trainer02-sumin
   rules:
     - path: /.*
-      methods: ["GET","POST"]
+      methods: ["GET","POST","PUT"]
       mutators: []
       accessStrategies:
-      - handler: noop
+      - handler: oauth2_introspection
+        config:
+          required_scope: ["read", "write"]
 
